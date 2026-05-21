@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/panel/samsung,ams309pw.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Samsung AMS309PW 720x720 Super AMOLED MIPI-DSI Panel
+
+maintainers:
+  - Joanna Hartley <joanna@jarocks.com>
+
+description:
+  The Samsung AMS309PW is a 720x720 square Super AMOLED MIPI-DSI video-mode
+  panel, used in the BlackBerry Q10 and BlackBerry Porsche Design P'9983.
+
+allOf:
+  - $ref: panel-common.yaml#
+
+properties:
+  compatible:
+    const: samsung,ams309pw
+
+  reg:
+    maxItems: 1
+
+  iovcc-supply:
+    description: 1.8 V I/O supply.
+
+  elvdd-supply:
+    description: +4.6 V AMOLED anode supply.
+
+  elvss-supply:
+    description: -4.6 V AMOLED cathode supply.
+
+  reset-gpios: true
+  port: true
+
+required:
+  - compatible
+  - reg
+  - iovcc-supply
+  - elvdd-supply
+  - elvss-supply
+  - reset-gpios
+  - port
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/gpio/gpio.h>
+
+    dsi {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        panel@0 {
+            compatible = "samsung,ams309pw";
+            reg = <0>;
+
+            iovcc-supply = <&reg_iovcc>;
+            elvdd-supply = <&reg_elvdd>;
+            elvss-supply = <&reg_elvss>;
+
+            reset-gpios = <&tlmm 97 GPIO_ACTIVE_LOW>;
+
+            port {
+                panel_in: endpoint {
+                    remote-endpoint = <&mdss_dsi0_out>;
+                };
+            };
+        };
+    };
+
+...
