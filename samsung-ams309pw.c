@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Samsung AMS309PW (Capella) Super AMOLED DSI panel driver.
+ * Samsung AMS309PW (Capella) AMOLED DSI panel driver.
  * Copyright (c) 2026 Joanna Hartley <joanna@jarocks.com>
  */
 
@@ -11,12 +11,13 @@
 #include <linux/of.h>
 #include <linux/regulator/consumer.h>
 
-#include <video/mipi_display.h>
-
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_modes.h>
 #include <drm/drm_panel.h>
 #include <drm/drm_probe_helper.h>
+
+#define AMS309PW_ACL_LEN	29
+#define AMS309PW_GAMMA_LEN	26
 
 struct ams309pw {
 	struct drm_panel panel;
@@ -32,35 +33,35 @@ static const struct regulator_bulk_data ams309pw_supplies[] = {
 	{ .supply = "elvss" },
 };
 
-static const u8 ams309pw_gamma_v1[] = {
+static const u8 ams309pw_gamma_v1[AMS309PW_GAMMA_LEN] = {
 	0xFA, 0x01, 0x44, 0x14, 0x45, 0xB7, 0xC9, 0xB4,
 	0xB5, 0xC5, 0xB4, 0xC6, 0xD0, 0xC4, 0x9A, 0xA6,
 	0x96, 0xB5, 0xBD, 0xB4, 0x00, 0xB0, 0x00, 0xA0,
 	0x00, 0xCC,
 };
 
-static const u8 ams309pw_gamma_v2[] = {
+static const u8 ams309pw_gamma_v2[AMS309PW_GAMMA_LEN] = {
 	0xFA, 0x01, 0x49, 0x3C, 0x59, 0xC0, 0xC3, 0xAB,
 	0xC0, 0xC2, 0xB0, 0xCC, 0xCE, 0xC1, 0xA0, 0xA4,
 	0x96, 0xBD, 0xBE, 0xB5, 0x00, 0xAB, 0x00, 0xA6,
 	0x00, 0xBA,
 };
 
-static const u8 ams309pw_gamma_v3[] = {
+static const u8 ams309pw_gamma_v3[AMS309PW_GAMMA_LEN] = {
 	0xFA, 0x01, 0x5A, 0x44, 0x66, 0xAF, 0xBF, 0x98,
 	0xAF, 0xBB, 0xA3, 0xC1, 0xC9, 0xBA, 0x97, 0xA2,
 	0x8D, 0xB2, 0xB9, 0xAD, 0x00, 0xAC, 0x00, 0xA7,
 	0x00, 0xBE,
 };
 
-static const u8 ams309pw_acl_v1[] = {
+static const u8 ams309pw_acl_v1[AMS309PW_ACL_LEN] = {
 	0xC1, 0x47, 0x53, 0x13, 0x53, 0x00, 0x00, 0x02,
 	0x57, 0x00, 0x00, 0x03, 0xFF, 0x00, 0x00, 0x02,
 	0x06, 0x07, 0x0B, 0x0E, 0x10, 0x14, 0x17, 0x1A,
 	0x1E, 0x21, 0x24, 0x28, 0x2B,
 };
 
-static const u8 ams309pw_acl_v23[] = {
+static const u8 ams309pw_acl_v23[AMS309PW_ACL_LEN] = {
 	0xC1, 0x47, 0x53, 0x13, 0x53, 0x00, 0x00, 0x02,
 	0x57, 0x00, 0x00, 0x03, 0xFF, 0x00, 0x02, 0x06,
 	0x07, 0x0A, 0x0E, 0x10, 0x13, 0x16, 0x1A, 0x1D,
@@ -159,8 +160,7 @@ static int ams309pw_init_sequence(struct ams309pw *ctx)
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xFF, 0x10, 0x00, 0x00);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xF2, 0x5A, 0x03, 0x0D);
 
-	mipi_dsi_dcs_write_buffer_multi(&dsi_ctx, ams309pw_gamma_table(ctx),
-					sizeof(ams309pw_gamma_v3));
+	mipi_dsi_dcs_write_buffer_multi(&dsi_ctx, ams309pw_gamma_table(ctx), AMS309PW_GAMMA_LEN);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xF7, 0x03, 0x00);
 
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xF6, 0x00, 0x02, 0x00);
@@ -173,8 +173,7 @@ static int ams309pw_init_sequence(struct ams309pw *ctx)
 		0x07, 0xC0, 0x41, 0x9F, 0x00, 0xA0, 0x05);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xC0, 0x01);
 
-	mipi_dsi_dcs_write_buffer_multi(&dsi_ctx, ams309pw_acl_table(ctx),
-					sizeof(ams309pw_acl_v23));
+	mipi_dsi_dcs_write_buffer_multi(&dsi_ctx, ams309pw_acl_table(ctx), AMS309PW_ACL_LEN);
 
 	mipi_dsi_msleep(&dsi_ctx, 120);
 	mipi_dsi_dcs_set_display_on_multi(&dsi_ctx);
@@ -367,5 +366,5 @@ static struct mipi_dsi_driver ams309pw_driver = {
 module_mipi_dsi_driver(ams309pw_driver);
 
 MODULE_AUTHOR("Joanna Hartley <joanna@jarocks.com>");
-MODULE_DESCRIPTION("Samsung AMS309PW AMOLED panel driver");
-MODULE_LICENSE("GPL v2");
+MODULE_DESCRIPTION("Samsung AMS309PW AMOLED dsi panel driver");
+MODULE_LICENSE("GPL");
